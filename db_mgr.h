@@ -29,7 +29,91 @@ namespace db
  */
 
 
-struct ActionSOData
+struct ActionSOData;
+struct ActionSOQuery; //to set options of query
+struct CCPlanData;
+struct CCPlanQuery;
+struct CCPlanPhaseData;
+struct CCPlanPhaseQuery;
+struct CCZoneData;
+struct CCZoneQuery;
+struct CCZoneSOData;
+struct CCZoneSOQuery;
+struct DetectorData;
+struct DetectorQuery;
+struct DistrictData;
+struct DistrictQuery;
+struct ErrorsSOData;
+struct ErrorsSOQuery;
+struct LogbookData;
+struct LogbookQuery;
+struct PhaseData;
+struct PhaseQuery;
+struct PlanData;
+struct PlanQuery;
+struct PlanPhaseData;
+struct PlanPhaseQuery;
+struct SOData;
+struct SOQuery;
+struct SODetectorData;
+struct SODetectorQuery;
+struct TrafficData;
+struct TrafficQuery;
+struct UserData;
+struct UserQuery;
+struct UserLogData;
+struct UserLogQuery;
+
+class DbMgr
+{
+    friend DbMgr& GetDbMgr();
+public:
+    ~DbMgr(){ sdb_.close(); }
+    bool Createdb(std::string& db_path);
+    bool Opendb(std::string& db_path);
+
+    bool GetSetting(const std::string& settingName, std::string& settingValue);
+    bool InsertSetting(const std::string& settingNameToInsert, const std::string& settingValueToInsert);
+
+    bool InsertActioSO(ActionSOData& actionToInsert);
+    bool SelectActionSO(std::vector<ActionSOData>& result, ActionSOQuery* actionToSelect);
+    bool InsertErrorSO(ErrorsSOData& errorToInsert);
+    bool SelectErrorSO(std::vector<ErrorsSOData>& result, ErrorsSOQuery* errorToSelect);
+    bool ResetErrorSO(ErrorsSOQuery* errorToDisable, time_t fixTime);
+    bool InsertTraffic(TrafficData& trafficToInsert);
+    bool SelectTraffic(std::vector<TrafficData>& result, TrafficQuery* trafficToSelect);
+    bool InsertUserLog(UserLogData& userLogToInsert);
+    bool SelectUserLog(std::vector<UserLogData>& result, UserLogQuery* userToSelect);
+
+    std::string SoIdToTp(TObjId id);
+    TObjId SoIpToTd(std::string soIp);
+    template <typename T> bool InsertData(T& structToInsert);
+    template <typename D, typename Q> bool SelectQuery(std::vector<D>& result, Q& structToSelect,
+                                                        std::string* orderColumn = nullptr, unsigned int limit = 0);
+    template <typename Q> bool UpdateData(Q& dataToSet, Q& queryWhere);
+
+    std::string GetLastError() {return lastError_;}
+
+private:
+    DbMgr();
+    DbMgr(const DbMgr& other);
+    DbMgr& operator=(const DbMgr& other);
+
+    bool makeSODictionaries();
+
+    QSqlDatabase sdb_;
+    std::string lastError_;
+    bool DbMgr::checkQueryError (QSqlQuery& query_to_check, std::string* result);
+    std::map<TObjId, std::string> soIdToIp_;
+    std::map<std::string, TObjId> soIpToId_;
+    std::string check;
+
+   //QSqlDatabase has its own lastError member
+};
+
+DbMgr& GetDbMgr();
+ 
+ struct ActionSOData
 {
     ActionSOData(time_t actionDatetime, std::string action, TObjId userId,
                  TObjId soId): //it's good enough to send data into db
@@ -752,55 +836,4 @@ struct UserLogQuery
     std::string* pAction_;
     TObjId* pUserId_;
 };
-
-
-class DbMgr
-{
-    friend DbMgr& GetDbMgr();
-public:
-    ~DbMgr(){ sdb_.close(); }
-    bool Createdb(std::string& db_path);
-    bool Opendb(std::string& db_path);
-
-    bool GetSetting(const std::string& settingName, std::string& settingValue);
-    bool InsertSetting(const std::string& settingNameToInsert, const std::string& settingValueToInsert);
-
-    bool InsertActioSO(ActionSOData& actionToInsert);
-    bool SelectActionSO(std::vector<ActionSOData>& result, ActionSOQuery* actionToSelect);
-    bool InsertErrorSO(ErrorsSOData& errorToInsert);
-    bool SelectErrorSO(std::vector<ErrorsSOData>& result, ErrorsSOQuery* errorToSelect);
-    bool ResetErrorSO(ErrorsSOQuery* errorToDisable, time_t fixTime);
-    bool InsertTraffic(TrafficData& trafficToInsert);
-    bool SelectTraffic(std::vector<TrafficData>& result, TrafficQuery* trafficToSelect);
-    bool InsertUserLog(UserLogData& userLogToInsert);
-    bool SelectUserLog(std::vector<UserLogData>& result, UserLogQuery* userToSelect);
-
-    std::string SoIdToTp(TObjId id);
-    TObjId SoIpToTd(std::string soIp);
-    template <typename T> bool InsertData(T& structToInsert);
-    template <typename D, typename Q> bool SelectQuery(std::vector<D>& result, Q& structToSelect,
-                                                        std::string* orderColumn = nullptr, unsigned int limit = 0);
-    template <typename Q> bool UpdateData(Q& dataToSet, Q& queryWhere);
-
-    std::string GetLastError() {return lastError_;}
-
-private:
-    DbMgr();
-    DbMgr(const DbMgr& other);
-    DbMgr& operator=(const DbMgr& other);
-
-    bool makeSODictionaries();
-
-    QSqlDatabase sdb_;
-    std::string lastError_;
-    bool DbMgr::checkQueryError (QSqlQuery& query_to_check, std::string* result);
-    std::map<TObjId, std::string> soIdToIp_;
-    std::map<std::string, TObjId> soIpToId_;
-    std::string check;
-
-   //QSqlDatabase has its own lastError member
-};
-
-DbMgr& GetDbMgr();
-
 }  //namespace db
