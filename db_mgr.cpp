@@ -13,7 +13,7 @@ bool prepareInsert(QSqlQuery& query, std::map<std::string, std::string>& queryMa
 {
     if ( queryMap.size() <= 1)
     {
-        LG_ERR_RET_FALSE; //<-----------------
+        LG_ERR_RET_FALSE; //macros for logger
     }
 
     auto iter = queryMap.find("tablename");
